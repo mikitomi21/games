@@ -1,0 +1,441 @@
+#include "pch.h"
+#include <iostream>
+#include <string>
+#include <cstdlib>
+#include <time.h>
+
+using namespace std;
+
+void showMap(char **map)
+{
+	//pokazanie aktualnego stanu mapy
+	for (int i = 0; i < 7; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			if (i % 2 == 0) cout << "---";
+			else cout << "|" << map[(i/2)][j] << "|";
+		}
+		cout << endl;
+	}
+}
+
+char stepSinglePlayer(char **map)
+{
+	char player = 'X';
+	string movePos, change;
+	int x, y;
+	while (true)
+	{
+		cout << "Podaj wartosci [A1]: ";
+		cin >> movePos;
+
+		change = movePos[1];
+		y = atoi(change.c_str()) - 1;
+		change = movePos[0];
+		if (change == "A") x = 0;
+		else if (change == "B") x = 1;
+		else if (change == "C") x = 2;
+
+		//sprawdzamy, czy dane miejsce nie jest zajete
+		if (map[y][x] != 'X' && map[y][x] != 'Y')
+		{
+			map[y][x] = player;
+			return **map;
+		}
+	}
+}
+
+char stepAINaive(char **map)
+{
+	char player = 'Y';
+	//random seed
+	srand (time(NULL));
+
+	int x, y;
+	while (true)
+	{
+		x = rand() % 3;
+		y = rand() % 3;
+		if (map[y][x] != 'X' && map[y][x] != 'Y') break;
+	}
+	map[y][x] = player;
+	return **map;
+}
+
+char stepAIPro(char **map)
+{
+	char player = 'Y';
+	char enemy = 'X';
+	int number;
+
+	//atak***
+	//atak linii
+	for (int i = 0; i < 3; i++)
+	{
+		number = 3;
+
+		for (int j = 0; j < 3; j++)
+			if (map[i][j] == player) number--;
+
+		if (number == 1)
+		{
+			for (int j = 0; j < 3; j++)
+				if (map[i][j] != enemy && map[i][j] != player)
+				{
+					map[i][j] = player;
+					return **map;
+				}
+		}
+	}
+
+	//atak kolumny
+	for (int j = 0; j < 3; j++)
+	{
+		number = 3;
+
+		for (int i = 0; i < 3; i++)
+			if (map[i][j] == player) number--;
+
+		if (number == 1)
+		{
+			for (int i = 0; i < 3; i++)
+				if (map[i][j] != enemy && map[i][j] != player)
+				{
+					map[i][j] = player;
+					return **map;
+				}
+		}
+	}
+
+	//atak ukosu
+	number = 3;
+	for (int i = 0; i < 3; i++)
+	{
+		if (map[i][i] == player) number--;
+	}
+	if (number == 1)
+	{
+		for (int i = 0; i < 3; i++)
+			if (map[i][i] != enemy && map[i][i] != player)
+			{
+				map[i][i] = player;
+				return **map;
+			}
+	}
+
+	number = 3;
+	for (int i = 0; i < 3; i++)
+	{
+		if (map[2 - i][i] == player) number--;
+	}
+	if (number == 1)
+	{
+		for (int i = 0; i < 3; i++)
+			if (map[2 - i][i] != enemy && map[2 - i][i] != player)
+			{
+				map[2 - i][i] = player;
+				return **map;
+			}
+	}
+
+
+	//obrona***
+	//obrona linii
+	for (int i = 0; i < 3; i++)
+	{
+		number = 3;
+
+		for (int j = 0; j < 3; j++)
+			if (map[i][j] == enemy) number--;
+
+		if (number == 1)
+		{
+			for (int j = 0; j < 3; j++)
+				if (map[i][j] != enemy && map[i][j] != player)
+				{
+					map[i][j] = player;
+					return **map;
+				}
+		}	
+	}
+
+	//obrona kolumny
+	for (int j = 0; j < 3; j++)
+	{
+		number = 3;
+
+		for (int i = 0; i < 3; i++)
+			if (map[i][j] == enemy) number--;
+
+		if (number == 1)
+		{
+			for (int i = 0; i < 3; i++)
+				if (map[i][j] != enemy && map[i][j] != player)
+				{
+					map[i][j] = player;
+					return **map;
+				}
+		}
+	}
+
+	//obrona ukosu
+	number = 3;
+	for (int i = 0; i < 3; i++)
+	{
+		if (map[i][i] == enemy) number--;
+	}
+	if (number == 1)
+	{
+		for (int i = 0; i < 3; i++)
+			if (map[i][i] != enemy && map[i][i] != player)
+			{
+				map[i][i] = player;
+				return **map;
+			}
+	}
+
+	number = 3;
+	for (int i = 0; i < 3; i++)
+	{
+		if (map[2 - i][i] == enemy) number--;
+	}
+	if (number == 1)
+	{
+		for (int i = 0; i < 3; i++)
+			if (map[2-i][i] != enemy && map[2-i][i] != player)
+			{
+				map[2-i][i] = player;
+				return **map;
+			}
+	}
+
+	//randomowy ruch
+	stepAINaive(map);
+	
+	return **map;
+}
+
+char stepMultiplayer(char **map, int &move)
+{
+	char player;
+	if (move == 0)
+	{
+		player = 'X';
+		move++;
+	}
+	else
+	{
+		player = 'Y';
+		move--;
+	}
+	string movePos, change;
+	int x, y;
+	cout << "Podaj wartosci [A1]: ";
+	cin >> movePos;
+
+	change = movePos[1];
+	y = atoi(change.c_str())-1;
+	change = movePos[0];
+	if (change == "A") x = 0;
+	else if (change == "B") x = 1;
+	else if (change == "C") x = 2;
+	
+	map[y][x] = player;
+	return **map;
+}
+
+bool checkWin(char **map)
+{
+	char playerOne = 'X';
+	char playerTwo = 'Y';
+	bool win;
+	//w jednej linii
+	for (int i = 0; i < 3; i++)
+	{
+		//X
+		win = 1;
+		for (int j = 0; j < 3; j++)
+		{
+			if (map[i][j] != playerOne) win = 0;
+		}
+		if (win == 1)
+		{
+			cout << "wygrana " << playerOne << endl;
+			return true;
+		}
+
+		win = 1;
+		for (int j = 0; j < 3; j++)
+		{
+			if (map[i][j] != playerTwo) win = 0;
+		}
+		if (win == 1)
+		{
+			cout << "wygrana " << playerTwo << endl;
+			return true;
+		}
+			
+	}
+
+	//w jednej kolumnie
+	for (int j = 0; j < 3; j++)
+	{
+		win = 1;
+		for (int i = 0; i < 3; i++)
+		{
+			if (map[i][j] != playerOne) win = 0;
+		}
+		if (win == 1)
+		{
+			cout << "wygrana " << playerOne << endl;
+			return true;
+		}
+
+		win = 1;
+		for (int i = 0; i < 3; i++)
+		{
+			if (map[i][j] != playerTwo) win = 0;
+		}
+		if (win == 1)
+		{
+			cout << "wygrana " << playerTwo << endl;
+			return true;
+		}
+	}
+
+	//na krzyz lewo-gora -> prawo-dol
+	win = 1;
+	for (int i = 0; i < 3; i++)
+	{
+		if (map[i][i] != playerOne) win = 0;
+	}
+	if (win == 1)
+	{
+		cout << "wygrana " << playerOne << endl;
+		return true;
+	}
+
+	win = 1;
+	for (int i = 0; i < 3; i++)
+	{
+		if (map[i][i] != playerTwo) win = 0;
+	}
+	if (win == 1)
+	{
+		cout << "wygrana " << playerTwo << endl;
+		return true;
+	}
+
+	//na krzyz lewo-dol -> prawo-gora
+	win = 1;
+	for (int i = 0; i < 3; i++)
+	{
+		if (map[2-i][i] != playerOne) win = 0;
+	}
+	if (win == 1)
+	{
+		cout << "wygrana " << playerOne << endl;
+		return true;
+	}
+
+	win = 1;
+	for (int i = 0; i < 3; i++)
+	{
+		if (map[2 - i][i] != playerTwo) win = 0;
+	}
+	if (win == 1)
+	{
+		cout << "wygrana " << playerTwo << endl;
+		return true;
+	}
+	return false;
+}
+
+bool checkDraw(char **map)
+{
+	bool draw = 1;
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			if (map[i][j] == 'X' || map[i][j] == 'Y');
+			else draw = 0;
+		}
+	}
+	if (draw == 1) cout << "Remis" << endl;
+	return draw;
+}
+
+int main()
+{
+	int move = 0;
+	//deklaruję tablicę dynamicznie
+	char **map = new char *[3];
+	for (int i = 0; i < 3; i++)
+	{
+		map[i] = new char[3];
+	}
+
+
+	//przypisuje puste wartosci do tablicy (start gry)
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			map[i][j] = ' ';
+		}
+	}
+
+	int numberOfPlayers;
+	cout << "Wybierz ilosc graczy:" << endl;
+	cout << "1.Jeden gracz" << endl;
+	cout << "2.Dwoch graczy" << endl;
+	cin >> numberOfPlayers;
+	switch (numberOfPlayers)
+	{
+	case 1:
+		int level;
+		cout << "Wybierz level AI:" << endl;
+		cout << "1.Easy" << endl;
+		cout << "2.Pro" << endl;
+		cin >> level;
+		switch (level)
+		{
+		case 1:
+			while (true)
+			{
+				showMap(map);
+				if (checkWin(map) == true || checkDraw(map) == true) break;
+				stepSinglePlayer(map);
+				showMap(map);
+				if (checkWin(map) == true || checkDraw(map) == true) break;
+
+				stepAINaive(map);
+			}
+			break;
+		case 2:
+			while (true)
+			{
+				showMap(map);
+				if (checkWin(map) == true || checkDraw(map) == true) break;
+				stepSinglePlayer(map);
+				showMap(map);
+				if (checkWin(map) == true || checkDraw(map) == true) break;
+				stepAIPro(map);
+			}
+			break;
+		default:
+			break;
+		}
+	case 2:
+		while (true) {
+			showMap(map);
+			if (checkWin(map) == true || checkDraw(map) == true) break;
+			stepMultiplayer(map, move);
+		}
+		break;
+	default:
+		break;
+	}
+}
